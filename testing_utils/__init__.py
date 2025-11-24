@@ -1,8 +1,8 @@
 from .utils import BaseUtils
-from .models import Model, ModelRequest
+from .models import Model, FixtureSpec
 
 __all__ = [
     "BaseUtils",
     "Model",
-    "ModelRequest",
+    "FixtureSpec",
 ]

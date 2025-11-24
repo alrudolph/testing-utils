@@ -33,5 +33,5 @@ class DatabaseUtils(BaseUtils[Transaction, BaseModel]):
     def fork(self, label: str = "") -> Self:
         return self._fork(DatabaseUtils, label)
 
-    def start_transaction(self) -> Transaction:
+    def start(self) -> Transaction:
         return Transaction(self)

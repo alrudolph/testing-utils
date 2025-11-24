@@ -20,18 +20,18 @@ class Model:
 
 
 @dataclass
-class ModelRequest:
+class FixtureSpec:
     name: str
     args: dict[str, Any]
 
 
 @dataclass
-class ModelWithRequest:
+class ModelWithFixture:
     """
     TODO:
     """
     model: Model
-    request: ModelRequest
+    fixture: FixtureSpec
 
 
 T = TypeVar("T")

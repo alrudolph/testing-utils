@@ -1,29 +1,29 @@
-from .models import Model, ModelRequest, ModelWithRequest
+from .models import Model, FixtureSpec, ModelWithFixture
 
 
 def topological_sort_and_fill(
     models: list[Model],
-    requests: list[ModelRequest],
-) -> list[ModelWithRequest]:
-    models_with_requests: list[ModelWithRequest] = []
-    request_model_names = {request.name for request in requests}
+    fixtures: list[FixtureSpec],
+) -> list[ModelWithFixture]:
+    models_with_fixtures: list[ModelWithFixture] = []
+    fixture_model_names = {fixture.name for fixture in fixtures}
 
-    for request in requests:
-        model = next((m for m in models if m.name == request.name), None)
+    for fixture in fixtures:
+        model = next((m for m in models if m.name == fixture.name), None)
 
-        assert model is not None, f"Model {request.name} not found in models list"
+        assert model is not None, f"Model {fixture.name} not found in models list"
 
-        models_with_requests.append(ModelWithRequest(model=model, request=request))
+        models_with_fixtures.append(ModelWithFixture(model=model, fixture=fixture))
 
     visited_names = set[str]()
-    stack: list[ModelWithRequest] = []
+    stack: list[ModelWithFixture] = []
 
-    def dfs(node: ModelWithRequest) -> None:
+    def dfs(node: ModelWithFixture) -> None:
         visited_names.add(node.model.name)
 
         for dependency in node.model.requires:
             if (
-                dependency not in request_model_names
+                dependency not in fixture_model_names
                 and dependency not in visited_names
             ):
                 # user didn't specify this model, so add in default
@@ -35,9 +35,9 @@ def topological_sort_and_fill(
                 msg = f"Model {dependency} not found in models list"
                 assert model_to_add is not None, msg
 
-                node_to_add = ModelWithRequest(
+                node_to_add = ModelWithFixture(
                     model=model_to_add,
-                    request=ModelRequest(
+                    fixture=FixtureSpec(
                         name=model_to_add.name,
                         args={},
                     ),
@@ -46,8 +46,8 @@ def topological_sort_and_fill(
                 dfs(node_to_add)
             elif dependency not in visited_names:
                 # add parent dependency
-                user_specified_node_to_add: ModelWithRequest | None = next(
-                    (m for m in models_with_requests if m.model.name == dependency),
+                user_specified_node_to_add: ModelWithFixture | None = next(
+                    (m for m in models_with_fixtures if m.model.name == dependency),
                     None,
                 )
 
@@ -58,7 +58,7 @@ def topological_sort_and_fill(
 
         stack.append(node)
 
-    for node in models_with_requests:
+    for node in models_with_fixtures:
         if node.model.name not in visited_names:
             dfs(node)
 

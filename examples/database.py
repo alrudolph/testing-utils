@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Self
+from typing import Self, cast
 
 from pydantic import BaseModel
 
@@ -30,8 +30,9 @@ class DatabaseUtils(BaseUtils[Transaction, BaseModel]):
         super().__init__(**kwargs)
         self._db = db
 
-    def fork(self, label: str = "") -> Self:
-        return self._fork(DatabaseUtils, label)
+    def fork(self, label: str = "") -> DatabaseUtils:
+        forked = self._fork(DatabaseUtils, label)
+        return cast(DatabaseUtils, forked)
 
     def start_transaction(self) -> Transaction:
         return Transaction(self)

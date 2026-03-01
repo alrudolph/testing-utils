@@ -73,7 +73,7 @@ class BaseUtils[TTransaction, TValue](ABC):
     #
     # TODO: support sync too
     #
-    async def _dispatch(
+    async def _create_model(
         self,
         tx: TTransaction,
         model: Model,
@@ -83,6 +83,18 @@ class BaseUtils[TTransaction, TValue](ABC):
         create_defaults_func = getattr(tx, f"_create_{model.name}_defaults")
         defaults = create_defaults_func(**data)
         value = await getattr(repo, f"create_{model.name}")(**defaults)
+        self._created_values[model.name] = value
+
+    #
+    # TODO: support sync too
+    #
+    async def _get_model(
+        self,
+        model: Model,
+        data: dict[str, Any],
+    ) -> None:
+        repo = getattr(self, f"_get_{model.plural_name}_repo")()
+        value = await getattr(repo, f"get_{model.name}")(**data)
         self._created_values[model.name] = value
 
     #
@@ -114,14 +126,28 @@ class BaseUtils[TTransaction, TValue](ABC):
             if self._find_value(model.model.name) is not None:
                 continue
 
-            logger.debug(
-                "%s creating %s with args: %s",
-                self._name,
-                model.model.name,
-                model.request.args,
-            )
+            req = model.request
 
-            await self._dispatch(tx, model.model, model.request.args)
+            if model.request.is_create_request(req):
+                logger.debug(
+                    "%s creating %s with args: %s",
+                    self._name,
+                    model.model.name,
+                    req.args,
+                )
+
+                await self._create_model(tx, model.model, req.args)
+            elif model.request.is_existing_request(req):
+                logger.debug(
+                    "%s getting %s with args: %s",
+                    self._name,
+                    model.model.name,
+                    req.args,
+                )
+
+                await self._get_model(model.model, req.args)
+            else:
+                raise ValueError(f"Unknown request type: {req.type}")
 
         self._requests = []
 

@@ -1,3 +1,5 @@
+"""Utils for sorting models based on dependencies."""
+
 from .models import Model, ModelRequest, ModelWithRequest
 
 
@@ -5,6 +7,12 @@ def topological_sort_and_fill(
     models: list[Model],
     requests: list[ModelRequest],
 ) -> list[ModelWithRequest]:
+    """Figures out dependencies of requested models to create.
+
+    Models should be specified with their dependencies in a strict DAG format. If a model is requested
+    then we can automatically add in any parent dependencies that aren't already requested.
+    See [advanced usage](TODO:) for ideas on handling situations that don't fit into a clean DAG.
+    """
     models_with_requests: list[ModelWithRequest] = []
     request_model_names = {request.name for request in requests}
 

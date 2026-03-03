@@ -1,3 +1,5 @@
+"""BaseUtils and BaseTransaction classes for users to inherit and implement."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -11,6 +13,31 @@ logger = getLogger("testing-utils")
 
 
 class BaseUtils[TTransaction, TValue](ABC):
+    """BaseUtils is the base class for the user implemented utils entry point.
+
+    This class provides core logic for creating transactions [TODO:] and retrieving values.
+    Though the user will need to implement some logic to get started.
+
+    Notes
+    -----
+    User Implementation Checklist:
+
+    * Implement `start()` to return a transaction object.
+    * Implement `fork()` to return a new instance of the utils class with the same state. Call the underlying `_fork()` method and case the type the implemented utils class.
+    * For each entity model implement:
+        * `_get_{model_plural_name}_repo()` to return the repository for that model. This class will have the get and create methods used in the transaction to call the user's API.
+        * The property `{model_name}` to return the instantiation of the entity. You can call `_get_value("{model_name}")` to get the value of the model but should cast it to the correct type.
+
+    When inheriting from this class, set the `_models` attribute in the constructor to a list of `Model` objects with the correct dependencies and names.
+    This will be used to determine the order of creation and retrieval of entities.
+
+    Parameters
+    ----------
+    TTransaction : TypeVar
+        The type of the transaction object that will be used in the utils, returned by the `start()` method.
+    TValue : TypeVar
+        The type of the values that will be created and stored in the utils.
+    """
 
     def __init__(
         self,
@@ -19,6 +46,10 @@ class BaseUtils[TTransaction, TValue](ABC):
         requests: Optional[list[ModelRequest]] = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the BaseUtils.
+
+        This class should be initiated by the user with no arguments passed in. The arguments are used for internal purposes and will be passed in when forking.
+        """
         self._data: dict[str, Any] = {}
         self._name = name
         self._parent = parent
@@ -30,6 +61,58 @@ class BaseUtils[TTransaction, TValue](ABC):
         self._requests = or_(requests, [])
         self._models: list[Model] = []
         self._kwargs = kwargs
+
+    @abstractmethod
+    def start(self) -> TTransaction:
+        """Start a transaction.
+
+        This method should return the user defined transaction object.
+        Consider adding arguments to the utils class constructor if the transaction has dependencies.
+        """
+
+    @abstractmethod
+    def fork(self, label: str = "") -> Self:
+        """Fork the utils to create child state.
+
+        Forking uses existing entities created bu the current utils class and allows you to create new entities on top of that state.
+        This is useful when you have to create multiple entities such as in a 1:N relationship.
+        This method can call the underlying `_fork()` but should type cast to the user implemented utils class.
+        """
+
+    #
+    # TODO: support sync too
+    #
+    async def commit(self, tx: TTransaction) -> Self:
+        """Commit a transaction to create and retrieve values.
+
+        When the user calls commit on the transaction class this method will be called.
+        This method goes through the model hierarchy and creates and retrieves values based on the requests made in the transaction and any parent dependencies.
+        """
+        await self._commit(tx)
+
+        children = self._children.copy()
+
+        while len(children) > 0:
+            child = children.pop(0)
+            await child._commit(tx)
+            children.extend(child._children)
+
+        return self
+
+    def _fork[T: BaseUtils](self, cls: type[T], label: str = "") -> T:
+        name = f"{self._name}.{len(self._children)}"
+
+        if len(label) > 0:
+            name += f".{label}"
+
+        child = cls(
+            name=name,
+            parent=self,
+            requests=self._requests.copy(),
+            **self._kwargs,
+        )
+        self._children.append(child)
+        return child
 
     def _find_value(self, name: str) -> TValue | None:
         # if not self._is_setup:
@@ -64,12 +147,6 @@ class BaseUtils[TTransaction, TValue](ABC):
         msg = f"Value {name} not found in created values or parent."
         raise RuntimeError(msg)
 
-    @abstractmethod
-    def start(self) -> TTransaction:
-        """
-        TODO:
-        """
-
     #
     # TODO: support sync too
     #
@@ -96,22 +173,6 @@ class BaseUtils[TTransaction, TValue](ABC):
         repo = getattr(self, f"_get_{model.plural_name}_repo")()
         value = await getattr(repo, f"get_{model.name}")(**data)
         self._created_values[model.name] = value
-
-    #
-    # TODO: support sync too
-    #
-    async def commit(self, tx: TTransaction) -> None:
-        """
-        TODO:
-        """
-        await self._commit(tx)
-
-        children = self._children.copy()
-
-        while len(children) > 0:
-            child = children.pop(0)
-            await child._commit(tx)
-            children.extend(child._children)
 
     #
     # TODO: support sync too
@@ -151,23 +212,24 @@ class BaseUtils[TTransaction, TValue](ABC):
 
         self._requests = []
 
-    @abstractmethod
-    def fork(self, label: str = "") -> Self:
-        """
-        TODO:
-        """
 
-    def _fork[T: BaseUtils](self, cls: type[T], label: str = "") -> T:
-        name = f"{self._name}.{len(self._children)}"
+class BaseTransaction[T: BaseUtils]():
+    """BaseTransaction is the base class for the user implemented transaction object.
 
-        if len(label) > 0:
-            name += f".{label}"
+    This class should be used to allow the user to specify which entities they want to create (including default values) and retrieve.
 
-        child = cls(
-            name=name,
-            parent=self,
-            requests=self._requests.copy(),
-            **self._kwargs,
-        )
-        self._children.append(child)
-        return child
+    Notes
+    -----
+    For each entity model implement a `_create_{model_name}_defaults()` method that returns a dict of default values for creating that model.
+    This method will return a dictionary that will be splatted into the create method of the model's repository.
+
+    Use `self._utils._add_request()` to add a request to create or get an entity. Use the `ModelRequest.create()` and `ModelRequest.existing()` static methods to create the request objects.
+    """
+
+    def __init__(self, utils: T) -> None:
+        self._utils = utils
+
+    async def commit(self) -> T:
+        """Commit the transaction to create and retrieve values."""
+        await self._utils.commit(self)
+        return self._utils

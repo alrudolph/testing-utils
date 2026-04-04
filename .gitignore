@@ -3,6 +3,7 @@ uv.lock
 
 *.egg-info
 dist
+build
 
 __pycache__
 .ruff_cache

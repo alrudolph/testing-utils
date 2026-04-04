@@ -14,7 +14,7 @@ class Model:
     """List of names of models that this model depends on. These models will be created or retrieved before this model is created or retrieved."""
 
     plural: Optional[str] = None
-    """In most cases the plural name of the model will just be the name with an 's' at the end, but if this is not the case, you can specify the plural name here"""
+    """In most cases the plural name of the model will just be the name with an 's' at the end, but if this is not the case, you can specify the plural name here."""
 
     @property
     def plural_name(self) -> str:

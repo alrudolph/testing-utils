@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import Any, Optional, Self
 
-from .models import Model, FixtureSpec, or_
+from .models import FixtureSpec, Model, or_
 from .sort import topological_sort_and_fill
 
 logger = getLogger("testing-utils")

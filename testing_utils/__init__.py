@@ -1,13 +1,13 @@
 """Testing utils for creating and managing models and their dependencies."""
 
-from .utils import BaseUtils, BaseTransaction
-from .models import Model, ModelRequest, CreateModelRequest, ExistingModelRequest
+from .models import CreateModelRequest, ExistingModelRequest, Model, ModelRequest
+from .utils import BaseTransaction, BaseUtils
 
 __all__ = [
     "BaseTransaction",
     "BaseUtils",
-    "ModelRequest",
     "CreateModelRequest",
     "ExistingModelRequest",
     "Model",
+    "ModelRequest",
 ]

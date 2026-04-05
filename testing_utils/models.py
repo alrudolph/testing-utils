@@ -1,7 +1,7 @@
 """Models and model requests used to represent domain entities and requests to create or retrieve them."""
 
 from dataclasses import dataclass
-from typing import Any, Optional, TypeGuard, TypeVar, Literal
+from typing import Any, Literal, Optional, TypeGuard, TypeVar
 
 
 @dataclass

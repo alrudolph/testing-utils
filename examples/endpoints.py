@@ -29,9 +29,7 @@ class EndpointUtils(BaseUtils[Transaction, BaseModel]):
     def __init__(self, client, **kwargs) -> None:
         super().__init__(**kwargs)
         self._client = client
-        self._models = [
-            Model(name="", requires=[])
-        ]
+        self._models = [Model(name="", requires=[])]
 
     def fork(self, label: str = "") -> Self:
         return self._fork(EndpointUtils, label)

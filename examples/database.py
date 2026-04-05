@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Self, cast
+from typing import Any, Optional, Self, cast
 
 from pydantic import BaseModel
-from testing_utils import BaseUtils, BaseTransaction, Model, ModelRequest
+
+from testing_utils import BaseTransaction, BaseUtils, Model, ModelRequest
 from testing_utils.utils import or_
-from typing import Optional
 
 
 def test_company_membership():

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from testing_utils import BaseUtils, ModelRequest, Model, BaseTransaction
-from typing import Optional, Self, Any, cast
+from typing import Any, Optional, Self, cast
+
 import pytest
+
+from testing_utils import BaseTransaction, BaseUtils, Model, ModelRequest
 
 pytest_plugins = ("pytest_asyncio",)
 

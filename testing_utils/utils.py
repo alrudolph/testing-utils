@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import Any, Optional, Self
 
-from .models import Model, ModelRequest, or_
+from .models import Model, FixtureSpec, or_
 from .sort import topological_sort_and_fill
 
 logger = getLogger("testing-utils")
@@ -45,7 +45,7 @@ class BaseUtils[TTransaction, TValue](ABC):
         models: list[Model],
         name: str = "root",
         parent: Optional[Self] = None,
-        requests: Optional[list[ModelRequest]] = None,
+        fixtures: Optional[list[FixtureSpec]] = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the BaseUtils.
@@ -131,7 +131,7 @@ class BaseUtils[TTransaction, TValue](ABC):
         child = cls(
             name=name,
             parent=self,
-            requests=self._requests.copy(),
+            fixtures=self._fixtures.copy(),
             **self._kwargs,
         )
 

@@ -6,8 +6,8 @@ from .models import Model, ModelRequest, CreateModelRequest, ExistingModelReques
 __all__ = [
     "BaseTransaction",
     "BaseUtils",
+    "ModelRequest",
     "CreateModelRequest",
     "ExistingModelRequest",
     "Model",
-    "ModelRequest",
 ]

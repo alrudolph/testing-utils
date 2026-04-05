@@ -16,18 +16,18 @@ def topological_sort_and_fill(
     models_with_requests: list[ModelWithRequest] = []
     request_model_names = {request.name for request in requests}
 
-    for request in requests:
-        model = next((m for m in models if m.name == request.name), None)
+    for fixture in fixtures:
+        model = next((m for m in models if m.name == fixture.name), None)
 
-        assert model is not None, f"Model {request.name} not found in models list"
+        assert model is not None, f"Model {fixture.name} not found in models list"
 
-        models_with_requests.append(ModelWithRequest(model=model, request=request))
+        models_with_fixtures.append(ModelWithFixture(model=model, fixture=fixture))
 
     visited_names = set[str]()
     cannot_create_default_names = set[str]()
     stack: list[ModelWithRequest] = []
 
-    def dfs(node: ModelWithRequest) -> None:
+    def dfs(node: ModelWithFixture) -> None:
         visited_names.add(node.model.name)
 
         for dependency in node.model.requires:
@@ -64,8 +64,8 @@ def topological_sort_and_fill(
                 dfs(node_to_add)
             else:
                 # add parent dependency
-                user_specified_node_to_add: ModelWithRequest | None = next(
-                    (m for m in models_with_requests if m.model.name == dependency),
+                user_specified_node_to_add: ModelWithFixture | None = next(
+                    (m for m in models_with_fixtures if m.model.name == dependency),
                     None,
                 )
 

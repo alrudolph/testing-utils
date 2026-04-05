@@ -87,7 +87,7 @@ class ModelWithRequest:
     """Base request to create or retrieve a model alongside model information."""
 
     model: Model
-    request: ModelRequest
+    fixture: FixtureSpec
 
 
 T = TypeVar("T")
